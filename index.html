@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meus Imóveis à Venda</title>
+<meta name="theme-color" content="#0f5c6e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Imóveis">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --ink: #1b2733;
+    --muted: #5d6b79;
+    --line: #d5dbe1;
+    --accent: #0f5c6e;
+    --accent-ink: #ffffff;
+    --accent-soft: #dcecef;
+    --sold: #7b8591;
+    --danger: #b3382c;
+    --warn-bg: #fff4d6;
+    --warn-ink: #6b4a00;
+    --radius: 10px;
+    --c-Residencial: #0f5c6e;
+    --c-Terreno: #8a6416;
+    --c-Comercial: #5b4b9a;
+    --c-Industrial: #5d6b79;
+    --c-Rural: #3b7a3b;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12181e;
+      --surface: #1b242d;
+      --ink: #e8edf1;
+      --muted: #97a4b1;
+      --line: #2c3945;
+      --accent: #5cc0d4;
+      --accent-ink: #0b1a20;
+      --accent-soft: #1d3a43;
+      --sold: #8a95a1;
+      --danger: #ef7d70;
+      --warn-bg: #3a3118;
+      --warn-ink: #f0d58a;
+      --c-Residencial: #5cc0d4;
+      --c-Terreno: #d9a93f;
+      --c-Comercial: #a99bea;
+      --c-Industrial: #97a4b1;
+      --c-Rural: #7fc27f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 1rem; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--body); font-size: 16px; line-height: 1.5;
+  }
+  h1, h2, h3 { font-family: var(--display); margin: 0; line-height: 1.15; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  a { color: var(--accent); }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  header.top { padding: 1rem 0 1rem; }
+  header.top h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; letter-spacing: -0.02em; }
+  header.top p { margin: .25rem 0 0; color: var(--muted); }
+
+  /* abas */
+  .tabs {
+    display: flex; gap: .25rem; overflow-x: auto; margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--line); scrollbar-width: thin;
+  }
+  .tab {
+    flex: none; background: none; border: 0; cursor: pointer;
+    padding: .7rem 1rem; font-weight: 600; color: var(--muted);
+    border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab .count {
+    font-size: .75rem; background: var(--accent-soft); color: var(--accent);
+    border-radius: 99px; padding: .05rem .5rem; margin-left: .35rem;
+  }
+  .tabpanel[hidden] { display: none; }
+
+  .stats { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .stat b { display: block; font-family: var(--display); font-size: 1.5rem; font-weight: 800; }
+  .stat span { color: var(--muted); font-size: .85rem; }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem; }
+  .form-panel { position: sticky; top: 1rem; }
+  @media (max-width: 860px) { .form-panel { position: static; } }
+  .panel h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+
+  label { display: block; font-weight: 600; font-size: .9rem; margin: 0 0 .3rem; }
+  .field { margin-bottom: 1rem; }
+  input[type="text"], input[type="search"], textarea, select {
+    width: 100%; padding: .6rem .75rem; border: 1px solid var(--line);
+    border-radius: 8px; background: var(--bg);
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+
+  .photo-row { display: flex; align-items: center; gap: .75rem; }
+  .photo-preview {
+    width: 76px; height: 76px; border-radius: 8px; flex: none;
+    background: var(--accent-soft) center/cover no-repeat; border: 1px solid var(--line);
+  }
+  .photo-actions { display: flex; flex-direction: column; gap: .4rem; align-items: flex-start; }
+  input[type="file"] { display: none; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    padding: .6rem 1rem; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); font-weight: 600;
+    text-decoration: none; color: var(--ink);
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.small { padding: .35rem .65rem; font-size: .85rem; }
+  .btn.danger { color: var(--danger); }
+  .btn.danger:hover { border-color: var(--danger); }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; }
+  .form-buttons { display: flex; gap: .5rem; }
+  .form-buttons .primary { flex: 1; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+  .toolbar input[type="search"] { flex: 1 1 200px; width: auto; background: var(--surface); }
+  .toolbar select { width: auto; background: var(--surface); }
+
+  .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1rem; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card .img {
+    aspect-ratio: 16 / 10; background: var(--accent-soft) center/cover no-repeat;
+    display: grid; place-items: center; color: var(--accent); font-size: 2.2rem;
+  }
+  .card.vendido .img { filter: grayscale(1); opacity: .7; }
+  .card .body { padding: 1rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
+  .card h3 { font-size: 1.15rem; font-weight: 600; }
+  .price { font-family: var(--display); font-weight: 800; font-size: 1.5rem; color: var(--accent); }
+  .card.vendido .price { color: var(--sold); text-decoration: line-through; }
+  .desc { color: var(--muted); font-size: .92rem; white-space: pre-wrap; margin: 0; flex: 1; }
+  .desc.clamp { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .badge {
+    align-self: flex-start; font-size: .78rem; font-weight: 600;
+    padding: .15rem .6rem; border-radius: 99px; background: var(--accent-soft); color: var(--accent);
+  }
+  .badge.vendido { background: var(--line); color: var(--sold); }
+  .card .actions { display: flex; flex-wrap: wrap; gap: .4rem; padding-top: .5rem; border-top: 1px solid var(--line); }
+
+  .empty {
+    grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--muted);
+    border: 2px dashed var(--line); border-radius: var(--radius);
+  }
+
+  .footer-tools { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  .footer-tools small { color: var(--muted); flex-basis: 100%; }
+
+  /* ---------- Base de pesquisa ---------- */
+  .notice {
+    background: var(--warn-bg); color: var(--warn-ink); border-radius: var(--radius);
+    padding: .75rem 1rem; margin-bottom: 1rem; font-size: .92rem;
+  }
+  .filters {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: .6rem; margin-bottom: .75rem;
+  }
+  .filters .wide { grid-column: 1 / -1; }
+  .filters select, .filters input[type="search"] { background: var(--surface); }
+  .checks { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin-bottom: .75rem; }
+  .checks label { display: flex; align-items: center; gap: .4rem; font-weight: 500; margin: 0; cursor: pointer; }
+  .checks input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); }
+  .resultline { color: var(--muted); font-size: .9rem; margin: 0 0 .75rem; }
+
+  .base-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .pcard {
+    background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--cc, var(--accent));
+    border-radius: var(--radius); padding: .9rem 1rem; cursor: pointer;
+    display: flex; flex-direction: column; gap: .35rem;
+  }
+  .pcard:hover { border-color: var(--cc, var(--accent)); }
+  .pcard .ptop { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+  .cat {
+    font-size: .78rem; font-weight: 600; padding: .1rem .55rem; border-radius: 99px;
+    color: var(--cc, var(--accent)); border: 1px solid var(--cc, var(--accent));
+  }
+  .star {
+    background: none; border: 0; cursor: pointer; font-size: 1.35rem; line-height: 1;
+    color: var(--line); padding: .15rem .3rem; border-radius: 6px;
+  }
+  .star[aria-pressed="true"] { color: #e0a800; }
+  .pcard h3 { font-size: 1.02rem; font-weight: 600; }
+  .pprice { font-family: var(--display); font-weight: 800; font-size: 1.35rem; color: var(--accent); }
+  .pprice.none { font-size: 1rem; font-weight: 600; color: var(--muted); }
+  .meta { margin: 0; color: var(--muted); font-size: .88rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
+  .tag { font-size: .74rem; padding: .08rem .5rem; border-radius: 6px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+  .tag.hot { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 600; }
+
+  dialog {
+    border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
+    width: calc(100% - 1.5rem); max-width: 660px; padding: 0; overflow: hidden;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.55); }
+  .dlg { max-height: 90vh; overflow-y: auto; padding: 1.25rem; }
+  .dlg h2 { font-size: 1.3rem; margin: .4rem 0 .25rem; }
+  .dlg .pprice { margin-bottom: .5rem; }
+  .dlg h4 { font-family: var(--display); font-size: .95rem; margin: 1.1rem 0 .4rem; color: var(--accent); }
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: .3rem .75rem; font-size: .92rem; margin: 0; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; overflow-wrap: anywhere; }
+  @media (max-width: 480px) { .kv { grid-template-columns: 1fr; gap: 0; } .kv dt { margin-top: .5rem; } }
+  .dlg-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.1rem; }
+  .track { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .track textarea { min-height: 80px; }
+
+  /* imobiliárias e fontes */
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+  .info-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; }
+  .info-card h3 { font-size: 1.05rem; margin-bottom: .5rem; }
+  .idlinks { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .idlinks button { background: var(--accent-soft); color: var(--accent); border: 0; border-radius: 6px; padding: .1rem .55rem; cursor: pointer; font-weight: 600; }
+  details.notes { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: .75rem 1rem; margin-top: 1.25rem; }
+  details.notes summary { cursor: pointer; font-weight: 600; }
+  details.notes ul { padding-left: 1.2rem; margin: .75rem 0 0; }
+  details.notes li { margin-bottom: .6rem; font-size: .92rem; color: var(--muted); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--bg); padding: .6rem 1.1rem; border-radius: 8px;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Meus imóveis à venda</h1>
+    <p>Seus cadastros e a base de pesquisa de Ribeirão Preto e região, num só lugar.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Seções">
+    <button class="tab" role="tab" id="t-meus" data-tab="meus" aria-selected="true" aria-controls="tab-meus">Meus imóveis</button>
+    <button class="tab" role="tab" id="t-base" data-tab="base" aria-selected="false" aria-controls="tab-base">Base de pesquisa<span class="count" id="countBase"></span></button>
+    <button class="tab" role="tab" id="t-imob" data-tab="imob" aria-selected="false" aria-controls="tab-imob">Imobiliárias e corretores</button>
+    <button class="tab" role="tab" id="t-fontes" data-tab="fontes" aria-selected="false" aria-controls="tab-fontes">Fontes e notas</button>
+  </nav>
+
+  <!-- ===== Meus imóveis ===== -->
+  <section class="tabpanel" id="tab-meus" role="tabpanel" aria-labelledby="t-meus">
+    <div class="stats" aria-live="polite">
+      <div class="stat"><b id="statDisp">0</b><span>disponíveis</span></div>
+      <div class="stat"><b id="statVend">0</b><span>vendidos</span></div>
+      <div class="stat"><b id="statTotal">R$ 0</b><span>em carteira</span></div>
+    </div>
+
+    <div class="layout">
+      <aside class="panel form-panel">
+        <h2 id="formTitle">Novo imóvel</h2>
+        <form id="form" autocomplete="off" novalidate>
+          <input type="hidden" id="editId">
+          <div class="field">
+            <label for="nome">Nome do imóvel</label>
+            <input type="text" id="nome" placeholder="Ex.: Casa no Jardim Botânico" required>
+          </div>
+          <div class="field">
+            <label for="valor">Valor</label>
+            <input type="text" id="valor" inputmode="numeric" placeholder="R$ 0,00" required>
+          </div>
+          <div class="field">
+            <label for="descricao">Descrição</label>
+            <textarea id="descricao" placeholder="Metragem, quartos, localização, diferenciais…"></textarea>
+          </div>
+          <div class="field">
+            <label for="status">Situação</label>
+            <select id="status">
+              <option value="disponivel">Disponível</option>
+              <option value="vendido">Vendido</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Foto (opcional)</label>
+            <div class="photo-row">
+              <div class="photo-preview" id="photoPreview" aria-hidden="true"></div>
+              <div class="photo-actions">
+                <label class="btn small" for="foto" style="margin:0">Escolher foto</label>
+                <input type="file" id="foto" accept="image/*">
+                <button type="button" class="btn small danger" id="removePhoto" hidden>Remover foto</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-buttons">
+            <button type="submit" class="btn primary" id="saveBtn">Salvar imóvel</button>
+            <button type="button" class="btn" id="cancelBtn" hidden>Cancelar</button>
+          </div>
+        </form>
+      </aside>
+
+      <main>
+        <div class="toolbar">
+          <input type="search" id="busca" placeholder="Buscar por nome ou descrição" aria-label="Buscar imóveis">
+          <select id="filtro" aria-label="Filtrar por situação">
+            <option value="todos">Todos</option>
+            <option value="disponivel">Disponíveis</option>
+            <option value="vendido">Vendidos</option>
+          </select>
+          <select id="ordem" aria-label="Ordenar">
+            <option value="recentes">Mais recentes</option>
+            <option value="menor">Menor valor</option>
+            <option value="maior">Maior valor</option>
+            <option value="nome">Nome (A–Z)</option>
+          </select>
+        </div>
+        <div class="list" id="lista"></div>
+      </main>
+    </div>
+
+    <div class="footer-tools">
+      <button class="btn small" id="exportBtn">Baixar backup</button>
+      <label class="btn small" for="importFile" style="margin:0">Restaurar backup</label>
+      <input type="file" id="importFile" accept="application/json">
+      <small>Os dados ficam salvos neste navegador, neste aparelho. O backup inclui seus imóveis e também as marcações que você fizer na Base de pesquisa (favoritos, status e anotações).</small>
+    </div>
+  </section>
+
+  <!-- ===== Base de pesquisa ===== -->
+  <section class="tabpanel" id="tab-base" role="tabpanel" aria-labelledby="t-base" hidden>
+    <div class="notice">
+      Dados coletados em 13/10/2026 a partir de anúncios públicos (Zap, Viva Real, OLX, Trovit e outros). Telefones e WhatsApp não aparecem nas páginas de busca, então use o botão <b>Abrir anúncio</b> para falar com o anunciante. Alguns links levam a páginas de busca, onde é preciso localizar o imóvel pela descrição. Confirme preço e disponibilidade antes de agir.
+    </div>
+
+    <div class="stats" id="baseStats"></div>
+
+    <div class="filters">
+      <input type="search" id="bBusca" class="wide" placeholder="Buscar por título, bairro, cidade, característica…" aria-label="Buscar na base">
+      <select id="bCat" aria-label="Categoria"></select>
+      <select id="bMun" aria-label="Município"></select>
+      <select id="bFonte" aria-label="Fonte"></select>
+      <select id="bPreco" aria-label="Faixa de preço">
+        <option value="todos">Todos os preços</option>
+        <option value="faixa">Minha faixa (R$ 200 mil a R$ 1 bi)</option>
+        <option value="ate200">Até R$ 200 mil</option>
+        <option value="200-1">R$ 200 mil a R$ 1 mi</option>
+        <option value="1-5">R$ 1 mi a R$ 5 mi</option>
+        <option value="5-50">R$ 5 mi a R$ 50 mi</option>
+        <option value="50+">Acima de R$ 50 mi</option>
+        <option value="sem">Sem preço informado</option>
+      </select>
+      <select id="bPrio" aria-label="Prioridade">
+        <option value="">Qualquer prioridade</option>
+        <option value="Alta">Prioridade alta</option>
+        <option value="Media">Prioridade média</option>
+        <option value="Baixa">Prioridade baixa</option>
+      </select>
+      <select id="bOrdem" aria-label="Ordenar">
+        <option value="id">Ordem da planilha</option>
+        <option value="menor">Menor valor</option>
+        <option value="maior">Maior valor</option>
+        <option value="prio">Maior prioridade</option>
+        <option value="nome">Título (A–Z)</option>
+      </select>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="bDireto"> Só proprietário direto</label>
+      <label><input type="checkbox" id="bFav"> Só favoritos</label>
+      <label><input type="checkbox" id="bAcomp"> Só com status diferente de “Não iniciado”</label>
+      <button class="btn small" id="bLimpar" type="button">Limpar filtros</button>
+    </div>
+    <p class="resultline" id="bResult" aria-live="polite"></p>
+    <div class="base-grid" id="baseList"></div>
+  </section>
+
+  <!-- ===== Imobiliárias ===== -->
+  <section class="tabpanel" id="tab-imob" role="tabpanel" aria-labelledby="t-imob" hidden>
+    <p class="meta" style="margin-bottom:1rem">Imobiliárias e corretores identificados na pesquisa. Telefones aparecem mascarados nos portais, por isso o melhor canal costuma ser o site ou o Instagram.</p>
+    <div class="grid2" id="imobList"></div>
+  </section>
+
+  <!-- ===== Fontes ===== -->
+  <section class="tabpanel" id="tab-fontes" role="tabpanel" aria-labelledby="t-fontes" hidden>
+    <p class="meta" style="margin-bottom:1rem">De onde vieram os dados e quais foram as limitações de cada fonte.</p>
+    <div class="grid2" id="fontesList"></div>
+    <details class="notes" open>
+      <summary>Notas e limitações gerais da pesquisa</summary>
+      <ul id="notasList"></ul>
+    </details>
+  </section>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"><div class="dlg" id="dlgBody"></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* =====================================================================
+   Parte 1: Meus imóveis
+   ===================================================================== */
+(function () {
+  var KEY = "imoveis-venda-v1";
+  var imoveis = load();
+  var fotoAtual = "";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var form = $("form"), nome = $("nome"), valor = $("valor"), descricao = $("descricao"),
+      status = $("status"), editId = $("editId"), foto = $("foto"),
+      photoPreview = $("photoPreview"), removePhoto = $("removePhoto"),
+      cancelBtn = $("cancelBtn"), lista = $("lista");
+
+  var brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  var brlShort = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(imoveis)); }
+    catch (e) { toast("Não foi possível salvar. Tente uma foto menor."); }
+  }
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove("show"); }, 2600);
+  }
+  window.__toast = toast;
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  var valorCentavos = 0;
+  function setValor(reais) {
+    valorCentavos = Math.round((reais || 0) * 100);
+    valor.value = valorCentavos ? brl.format(valorCentavos / 100) : "";
+  }
+  valor.addEventListener("input", function () {
+    var digits = valor.value.replace(/\D/g, "").slice(0, 13);
+    valorCentavos = digits ? parseInt(digits, 10) : 0;
+    valor.value = valorCentavos ? brl.format(valorCentavos / 100) : "";
+  });
+
+  function setFoto(dataUrl) {
+    fotoAtual = dataUrl || "";
+    photoPreview.style.backgroundImage = fotoAtual ? "url(" + fotoAtual + ")" : "";
+    removePhoto.hidden = !fotoAtual;
+  }
+  foto.addEventListener("change", function () {
+    var file = foto.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var max = 900, scale = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement("canvas");
+        c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        setFoto(c.toDataURL("image/jpeg", 0.75));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+    foto.value = "";
+  });
+  removePhoto.addEventListener("click", function () { setFoto(""); });
+
+  function resetForm() {
+    form.reset(); editId.value = ""; setValor(0); setFoto("");
+    $("formTitle").textContent = "Novo imóvel";
+    $("saveBtn").textContent = "Salvar imóvel";
+    cancelBtn.hidden = true;
+  }
+  cancelBtn.addEventListener("click", resetForm);
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!nome.value.trim()) { nome.focus(); toast("Informe o nome do imóvel."); return; }
+    if (!valorCentavos) { valor.focus(); toast("Informe o valor do imóvel."); return; }
+    var dados = {
+      nome: nome.value.trim(), valor: valorCentavos / 100,
+      descricao: descricao.value.trim(), status: status.value, foto: fotoAtual
+    };
+    if (editId.value) {
+      var i = imoveis.findIndex(function (x) { return x.id === editId.value; });
+      if (i > -1) imoveis[i] = Object.assign(imoveis[i], dados);
+      toast("Imóvel atualizado.");
+    } else {
+      dados.id = uid(); dados.criadoEm = Date.now();
+      imoveis.push(dados);
+      toast("Imóvel cadastrado.");
+    }
+    save(); resetForm(); render();
+  });
+
+  function editar(id) {
+    var im = imoveis.find(function (x) { return x.id === id; });
+    if (!im) return;
+    editId.value = im.id; nome.value = im.nome; setValor(im.valor);
+    descricao.value = im.descricao || ""; status.value = im.status; setFoto(im.foto);
+    $("formTitle").textContent = "Editar imóvel";
+    $("saveBtn").textContent = "Salvar alterações";
+    cancelBtn.hidden = false;
+    nome.focus();
+    $("form").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function render() {
+    var q = $("busca").value.trim().toLowerCase();
+    var f = $("filtro").value, o = $("ordem").value;
+    var itens = imoveis.filter(function (im) {
+      if (f !== "todos" && im.status !== f) return false;
+      if (!q) return true;
+      return (im.nome + " " + (im.descricao || "")).toLowerCase().indexOf(q) > -1;
+    });
+    itens.sort(function (a, b) {
+      if (o === "menor") return a.valor - b.valor;
+      if (o === "maior") return b.valor - a.valor;
+      if (o === "nome") return a.nome.localeCompare(b.nome, "pt-BR");
+      return (b.criadoEm || 0) - (a.criadoEm || 0);
+    });
+    if (!itens.length) {
+      lista.innerHTML = '<div class="empty">' + (imoveis.length
+        ? "Nenhum imóvel encontrado com esses filtros."
+        : "Você ainda não cadastrou nenhum imóvel. Preencha o formulário ou copie um imóvel da Base de pesquisa.") + "</div>";
+    } else {
+      lista.innerHTML = itens.map(function (im) {
+        var vendido = im.status === "vendido";
+        var img = im.foto
+          ? '<div class="img" style="background-image:url(' + im.foto + ')" role="img" aria-label="Foto de ' + esc(im.nome) + '"></div>'
+          : '<div class="img" aria-hidden="true">&#8962;</div>';
+        return '<article class="card ' + (vendido ? "vendido" : "") + '">' + img +
+          '<div class="body">' +
+            '<span class="badge ' + (vendido ? "vendido" : "") + '">' + (vendido ? "Vendido" : "Disponível") + "</span>" +
+            "<h3>" + esc(im.nome) + "</h3>" +
+            '<div class="price">' + brl.format(im.valor) + "</div>" +
+            '<p class="desc clamp">' + esc(im.descricao || "Sem descrição.") + "</p>" +
+            '<div class="actions">' +
+              '<button class="btn small" data-a="edit" data-id="' + im.id + '">Editar</button>' +
+              '<button class="btn small" data-a="toggle" data-id="' + im.id + '">' + (vendido ? "Reabrir venda" : "Marcar como vendido") + "</button>" +
+              '<button class="btn small danger" data-a="del" data-id="' + im.id + '">Excluir</button>' +
+            "</div>" +
+          "</div></article>";
+      }).join("");
+    }
+    var disp = imoveis.filter(function (x) { return x.status !== "vendido"; });
+    $("statDisp").textContent = disp.length;
+    $("statVend").textContent = imoveis.length - disp.length;
+    $("statTotal").textContent = brlShort.format(disp.reduce(function (s, x) { return s + (x.valor || 0); }, 0));
+  }
+
+  lista.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-a]");
+    if (!b) return;
+    var id = b.getAttribute("data-id"), a = b.getAttribute("data-a");
+    if (a === "edit") return editar(id);
+    if (a === "toggle") {
+      var im = imoveis.find(function (x) { return x.id === id; });
+      im.status = im.status === "vendido" ? "disponivel" : "vendido";
+      save(); render(); toast(im.status === "vendido" ? "Marcado como vendido." : "Imóvel reaberto para venda.");
+    }
+    if (a === "del") {
+      var alvo = imoveis.find(function (x) { return x.id === id; });
+      if (confirm('Excluir "' + alvo.nome + '"? Essa ação não pode ser desfeita.')) {
+        imoveis = imoveis.filter(function (x) { return x.id !== id; });
+        if (editId.value === id) resetForm();
+        save(); render(); toast("Imóvel excluído.");
+      }
+    }
+  });
+  ["busca", "filtro", "ordem"].forEach(function (id) { $(id).addEventListener("input", render); });
+
+  /* usado pela Base de pesquisa */
+  window.MeusImoveis = {
+    adicionar: function (obj) {
+      if (obj.origem && imoveis.some(function (x) { return x.origem === obj.origem; })) return false;
+      obj.id = uid(); obj.criadoEm = Date.now(); obj.status = "disponivel"; obj.foto = "";
+      imoveis.push(obj); save(); render(); return true;
+    }
+  };
+
+  /* backup: imóveis + acompanhamento da base */
+  $("exportBtn").addEventListener("click", function () {
+    var pacote = {
+      versao: 2, exportadoEm: new Date().toISOString(),
+      imoveis: imoveis,
+      acompanhamento: (window.BaseApp ? window.BaseApp.getTrack() : {})
+    };
+    var blob = new Blob([JSON.stringify(pacote, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "imoveis-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  $("importFile").addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var dados = JSON.parse(r.result), lista2, acomp = null;
+        if (Array.isArray(dados)) { lista2 = dados; }
+        else if (dados && Array.isArray(dados.imoveis)) { lista2 = dados.imoveis; acomp = dados.acompanhamento || null; }
+        else throw new Error();
+        if (!confirm("Isso vai substituir os " + imoveis.length + " imóveis atuais por " + lista2.length + " do backup. Continuar?")) return;
+        imoveis = lista2.filter(function (x) { return x && x.nome && typeof x.valor === "number"; })
+                        .map(function (x) { x.id = x.id || uid(); return x; });
+        save(); render();
+        if (acomp && window.BaseApp) window.BaseApp.setTrack(acomp);
+        toast("Backup restaurado.");
+      } catch (err) { toast("Arquivo de backup inválido."); }
+    };
+    r.readAsText(file);
+    e.target.value = "";
+  });
+
+  render();
+})();
+
+/* =====================================================================
+   Parte 2: Base de pesquisa, imobiliárias e fontes
+   ===================================================================== */
+(function () {
+  var BASE = [{"id":1,"cat":"Residencial","tipo":"Casa","titulo":"Casa 3 quartos - Jardim Marchesi","preco":350000,"mun":"Ribeirao Preto","bairro":"Jardim Marchesi","end":"Jardim Marchesi, Ribeirao Preto - SP","areaC":125,"q":3,"s":1,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.zapimoveis.com.br/imovel/venda-casa-3-quartos-jardim-marchesi-ribeirao-preto-sp-125m2-id-2791986131/","fonte":"Zap Imoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":2,"cat":"Residencial","tipo":"Casa","titulo":"Casa 3 quartos, 1 suite, 2 vagas - Jardim Iraja","mun":"Ribeirao Preto","bairro":"Jardim Iraja","end":"Rua Doutor Isac Theodoro de Lima, Jardim Iraja, Ribeirao Preto - SP","areaC":229,"q":3,"s":1,"v":2,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://loft.com.br/imovel/casa-rua-doutor-isac-theodoro-de-lima-jardim-iraja-ribeirao-preto-3-quartos-229m2/7q3ch0m4","fonte":"Loft","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Baixa","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Preco informado apenas por m2 (R$3.275/m2); valor total nao disponivel na pesquisa - nao foi calculado para evitar estimativa nao verificada."},{"id":3,"cat":"Residencial","tipo":"Apartamento","titulo":"Apartamento 3 quartos mobiliado - Jardim Botanico","preco":725000,"mun":"Ribeirao Preto","bairro":"Jardim Botanico","end":"Jardim Botanico, Ribeirao Preto - SP","areaC":94,"q":3,"s":1,"carac":"Mobiliado, condominio ~R$600/mes","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.zapimoveis.com.br/imovel/venda-apartamento-3-quartos-mobiliado-jardim-botanico-ribeirao-preto-sp-94m2-id-2724452933/","fonte":"Zap Imoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":4,"cat":"Residencial","tipo":"Apartamento","titulo":"Apartamento 3 quartos, 2 suites, 2 vagas - Jardim Botanico","mun":"Ribeirao Preto","bairro":"Jardim Botanico","end":"Rua Siro Kaku, Jardim Botanico, Ribeirao Preto - SP","areaC":105,"q":3,"s":2,"v":2,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://loft.com.br/imovel/apartamento-rua-siro-kaku-jardim-botanico-ribeirao-preto-3-quartos-105m2/zl0szh6k","fonte":"Loft","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Baixa","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Preco informado apenas por m2 (R$6.476/m2); valor total nao disponivel na pesquisa."},{"id":5,"cat":"Residencial","tipo":"Apartamento","titulo":"Apartamento 2 quartos, 1 suite, 1 vaga - Jardim Sumare","preco":560000,"mun":"Ribeirao Preto","bairro":"Jardim Sumare","end":"Jardim Sumare, Ribeirao Preto - SP","areaC":76,"q":2,"s":1,"v":1,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.casamineira.com.br/venda/apartamento/jardim-sumare_ribeirao-preto_sp/3-quartos","fonte":"Casa Mineira (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Baixa","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca/filtro da Casa Mineira; anuncio individual sem link direto proprio identificado nesta pesquisa."},{"id":6,"cat":"Residencial","tipo":"Apartamento","titulo":"Apartamento 3 quartos, 3 vagas - Jardim Sumare","preco":540000,"mun":"Ribeirao Preto","bairro":"Jardim Sumare","end":"Jardim Sumare, Ribeirao Preto - SP","areaC":138,"q":3,"v":3,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.casamineira.com.br/venda/apartamento/jardim-sumare_ribeirao-preto_sp/3-quartos","fonte":"Casa Mineira (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Baixa","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca/filtro; anuncio individual sem link direto proprio identificado nesta pesquisa."},{"id":7,"cat":"Residencial","tipo":"Apartamento","titulo":"Apartamento 3 quartos, 2 vagas - Jardim Sumare","preco":500000,"mun":"Ribeirao Preto","bairro":"Jardim Sumare","end":"Jardim Sumare, Ribeirao Preto - SP","areaC":142,"q":3,"v":2,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.casamineira.com.br/venda/apartamento/jardim-sumare_ribeirao-preto_sp/3-quartos","fonte":"Casa Mineira (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Baixa","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nome do anunciante (Acqua Imobiliaria) nao localizado em busca externa nesta rodada","prox":"Abrir anuncio na Wimoveis e usar 'Contate o anunciante'; buscar 'Acqua Imobiliaria' no Google Meu Negocio/Instagram com endereco completo","obs":"URL e da pagina de busca/filtro; anuncio individual sem link direto proprio identificado nesta pesquisa."},{"id":8,"cat":"Residencial","tipo":"Cobertura","titulo":"Cobertura duplex 5 suites - Jardim Ilhas do Sul","preco":4000000,"mun":"Ribeirao Preto","bairro":"Jardim Ilhas do Sul","end":"Jardim Ilhas do Sul, Ribeirao Preto - SP","areaC":437,"s":5,"v":6,"carac":"Codigo do anuncio CM-2","anunciante":"Acqua Imobiliaria","tipoAnunc":"Imobiliaria/Corretor","empresa":"Acqua Imobiliaria","url":"https://www.wimoveis.com.br/propriedades/cobertura-para-venda-em-jardim-ilhas-do-sul-de-3040963659.html","fonte":"Wimoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nome do anunciante (RP Imoveis) nao localizado em busca externa nesta rodada - nome generico demais para busca isolada","prox":"Abrir anuncio na Wimoveis e usar 'Contate o anunciante'"},{"id":9,"cat":"Residencial","tipo":"Cobertura","titulo":"Cobertura 3 quartos, 3 vagas - Mirante Condoclub, Bonfim Paulista","preco":1170000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Condominio Mirante Condoclub, Bonfim Paulista, Ribeirao Preto - SP","areaC":143,"q":3,"v":3,"anunciante":"RP Imoveis","tipoAnunc":"Imobiliaria/Corretor","empresa":"KF Negocios Imobiliarios (KF Imoveis RP)","site":"https://www.kfimoveis.com.br","creci":"101264-F-SP","url":"https://www.wimoveis.com.br/propriedades/cobertura-para-venda-em-bonfim-paulista-de-143.00m-3040823699.html","fonte":"Wimoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Site oficial + Instagram/Facebook + CRECI (telefone mascarado nos portais)","pagProf":"https://www.instagram.com/kfimoveis.rp","validacao":"Parcialmente confirmado (canal oficial verificado; telefone/whatsapp nao disponivel)","prox":"Contatar via site kfimoveis.com.br ou Instagram @kfimoveis.rp; endereco fisico Av. Independencia 522 Sala 01, Centro, Ribeirao Preto/SP","obs":"Empresa identificada e verificada na Rodada 2: KF Negocios Imobiliarios, CRECI 101264-F-SP, Instagram @kfimoveis.rp, Facebook kfimoveis.rp, site kfimoveis.com.br. Telefone continua mascarado em todos os anuncios encontrados ('(16) ou (16)')."},{"id":10,"cat":"Residencial","tipo":"Cobertura","titulo":"Cobertura - Condominio Regalle Club, Lagoinha","mun":"Ribeirao Preto","bairro":"Lagoinha","end":"Condominio Regalle Club, Lagoinha, Ribeirao Preto - SP","carac":"Disponivel apenas para venda (segundo anuncio)","anunciante":"KF Negocios Imobiliarios RP","tipoAnunc":"Imobiliaria/Corretor","empresa":"KF Negocios Imobiliarios RP","url":"https://www.wimoveis.com.br/propriedades/cobertura-a-venda-condominio-regalle-club-lagoinha-3026271474.html","fonte":"Wimoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Preco nao informado no resumo da busca."},{"id":11,"cat":"Residencial","tipo":"Casa (alto padrao)","titulo":"Casa 4 quartos, 4 suites - regiao Bonfim Paulista","preco":1685000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaC":187,"q":4,"s":4,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.wimoveis.com.br/propriedades/casa-com-4-dormitorios-a-venda-187-m-por-r$-3036227373.html","fonte":"Wimoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":12,"cat":"Residencial","tipo":"Casa (alto padrao)","titulo":"Casa 4 quartos, 4 suites - regiao Bonfim Paulista (variante)","preco":1535000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaC":187,"q":4,"s":4,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.casamineira.com.br/venda/casa/bonfim-paulista_ribeirao-preto_sp","fonte":"Casa Mineira (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Possivel duplicata do item anterior (mesma tipologia/bairro, preco diferente); confirmar antes de prospectar as duas."},{"id":13,"cat":"Residencial","tipo":"Casa (alto padrao)","titulo":"Casa em condominio, 3 suites, piscina - Alto do Castelo","preco":1500000,"mun":"Ribeirao Preto","bairro":"Alto do Castelo","end":"Condominio Alto do Castelo, Bonfim Paulista, Ribeirao Preto - SP","areaC":184,"s":3,"carac":"Piscina","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/casa-condominio-fechado-bonfim-paulista/84","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit; anuncio individual sem link direto proprio identificado nesta pesquisa."},{"id":14,"cat":"Residencial","tipo":"Sobrado (alto padrao)","titulo":"Sobrado 4 quartos - Condominio Alphaville","preco":2700000,"mun":"Ribeirao Preto","bairro":"Alphaville","end":"Condominio Alphaville, Ribeirao Preto - SP","q":4,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/condom%C3%ADnio-residencial-bonfim-paulista/90","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit; anuncio individual sem link direto proprio identificado nesta pesquisa."},{"id":15,"cat":"Residencial","tipo":"Sobrado (alto padrao)","titulo":"Sobrado 540m2, 3 suites + consultorio - Arara Vermelha","preco":2700000,"mun":"Ribeirao Preto","bairro":"Arara Vermelha","end":"Condominio Arara Vermelha, Bonfim Paulista, Ribeirao Preto - SP","areaC":540,"s":3,"carac":"Consultorio no imovel","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/casa-condominio-fechado-bonfim-paulista/87","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit; anuncio individual sem link direto proprio identificado nesta pesquisa."},{"id":16,"cat":"Residencial","tipo":"Casa (alto padrao)","titulo":"Casa em condominio 403m2, 5 quartos, elevador - Jardim Olhos D'Agua","preco":5450000,"mun":"Ribeirao Preto","bairro":"Jardim Olhos D'Agua","end":"Condominio Jardim Olhos D'Agua, Bonfim Paulista, Ribeirao Preto - SP","areaC":403,"q":5,"carac":"Elevador","tipoAnunc":"Anunciante nao identificado - ver anuncio","empresa":"KF Negocios Imobiliarios (KF Imoveis RP)","site":"https://www.kfimoveis.com.br","creci":"101264-F-SP","url":"https://imoveis.trovit.com.br/condom%C3%ADnio-residencial-bonfim-paulista/90","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Site oficial + Instagram/Facebook + CRECI (telefone mascarado nos portais)","pagProf":"https://www.instagram.com/kfimoveis.rp","validacao":"Parcialmente confirmado (canal oficial verificado; telefone/whatsapp nao disponivel)","prox":"Contatar via site kfimoveis.com.br ou Instagram @kfimoveis.rp; endereco fisico Av. Independencia 522 Sala 01, Centro, Ribeirao Preto/SP","obs":"URL e da pagina de busca do Trovit; anuncio individual sem link direto proprio identificado nesta pesquisa. Imovel de alto valor (>=R$5M). | Empresa identificada e verificada na Rodada 2: KF Negocios Imobiliarios, CRECI 101264-F-SP, Instagram @kfimoveis.rp, Facebook kfimoveis.rp, site kfimoveis.com.br. Telefone continua mascarado em todos os anuncios encontrados ('(16) ou (16)')."},{"id":17,"cat":"Residencial","tipo":"Casa","titulo":"Casa residencial - leilao judicial","preco":596900.49,"mun":"Batatais","end":"Batatais - SP","areaC":60,"carac":"Area construida ~59,97 m2, terreno ~250 m2","tipoAnunc":"Leilao judicial","empresa":"Leilao Imovel","url":"https://www.leilaoimovel.com.br/imovel/sp/batatais/residencial-uma-casa-residencial-com-area-construida-de-59-97-m-e-area-total-de-250-00-m-do-terreno-imovel-2925161","fonte":"Leilao Imovel","dataPesq":"2026-10-13","situacao":"Leilao - imovel OCUPADO; data informada 31/08/2026 (confirmar se ja ocorreu)","propConf":"Nao confirmado","conf":"Alta","prio":"Baixa","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Imovel em leilao judicial e ocupado. Nao e uma venda direta comum; exige due diligence juridica antes de qualquer prospeccao ou intermediacao."},{"id":18,"cat":"Residencial","tipo":"Casa","titulo":"Casa em condominio - Centro","preco":720000,"mun":"Batatais","bairro":"Centro","end":"Centro, Batatais - SP","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.nestoria.com.br/batatais/casas/venda","fonte":"Nestoria (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca da Nestoria; anuncio individual sem link direto proprio identificado nesta pesquisa."},{"id":19,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Terreno 260m2 - Terras de San Pedro","preco":212000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Condominio Terras de San Pedro, Bonfim Paulista, Ribeirao Preto - SP","areaT":260,"anunciante":"KF Negocios Imobiliarios","tipoAnunc":"Imobiliaria/Corretor","empresa":"KF Negocios Imobiliarios","url":"https://www.wimoveis.com.br/propriedades/terras-de-san-pedro-terreno-de-condominio-a-venda-em-2978500893.html","fonte":"Wimoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":20,"cat":"Terreno","tipo":"Area para incorporacao","titulo":"Area 3.154m2 para torre residencial - Quinta da Primavera","preco":8800000,"mun":"Ribeirao Preto","bairro":"Quinta da Primavera","end":"Bairro Quinta da Primavera, Ribeirao Preto - SP","areaT":3154,"carac":"Indicada para edificacao de torre residencial","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-comercial-ribeirao-preto/76","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit. Imovel de alto valor (>=R$5M)."},{"id":21,"cat":"Terreno","tipo":"Area para incorporacao","titulo":"Area 3.054m2 para incorporadora - Quinta da Primavera","preco":10500000,"mun":"Ribeirao Preto","bairro":"Quinta da Primavera","end":"Bairro Quinta da Primavera, Ribeirao Preto - SP","areaT":3054,"carac":"Area para incorporadora, otima localizacao","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-mesorregi%C3%A3o-ribeir%C3%A3o-preto/46","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit. Imovel de alto valor (>=R$10M)."},{"id":22,"cat":"Terreno","tipo":"Gleba urbana","titulo":"Terreno 37.600m2 - Jardim Heitor Rigon","preco":30080000,"mun":"Ribeirao Preto","bairro":"Jardim Heitor Rigon","end":"Jardim Heitor Rigon, Ribeirao Preto - SP","areaT":37600,"carac":"Vendedor aberto a negociacao segundo o anuncio","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-mesorregi%C3%A3o-ribeir%C3%A3o-preto/89","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit. Imovel de alto valor (>=R$10M)."},{"id":23,"cat":"Terreno","tipo":"Area comercial","titulo":"Area comercial 5.973m2 - Rodovia Anhanguera (entrada da cidade)","preco":7167888,"mun":"Ribeirao Preto","end":"Rodovia Anhanguera, Ribeirao Preto - SP","areaT":5973,"carac":"Na entrada da cidade","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-comercial-ribeirao-preto/76","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit (mesma pagina do item de incorporacao da Quinta da Primavera). Imovel de alto valor (>=R$5M)."},{"id":24,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Lote 2.129m2 em condominio fechado","preco":5500000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaT":2129,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-bonfim-paulista/30","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Dado extraido do conteudo de paginas de busca do Trovit sobre terrenos em Bonfim Paulista; o anuncio individual especifico nao possui URL direta propria identificada nesta pesquisa (sao ~971 anuncios listados no agregador)."},{"id":25,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Lote 2.872m2 - Condominio Veneza","preco":3500000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaT":2872,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-bonfim-paulista/30","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Dado extraido do conteudo de paginas de busca do Trovit sobre terrenos em Bonfim Paulista; o anuncio individual especifico nao possui URL direta propria identificada nesta pesquisa (sao ~971 anuncios listados no agregador)."},{"id":26,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Lote 533m2 - Condominio Arara Azul","preco":650000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaT":533,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-bonfim-paulista/30","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Dado extraido do conteudo de paginas de busca do Trovit sobre terrenos em Bonfim Paulista; o anuncio individual especifico nao possui URL direta propria identificada nesta pesquisa (sao ~971 anuncios listados no agregador)."},{"id":27,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Lote 660m2 - Condominio Arara Azul","preco":660000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaT":660,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-bonfim-paulista/30","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Dado extraido do conteudo de paginas de busca do Trovit sobre terrenos em Bonfim Paulista; o anuncio individual especifico nao possui URL direta propria identificada nesta pesquisa (sao ~971 anuncios listados no agregador)."},{"id":28,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Lote 544m2 - Condominio Santa Monica I","preco":489600,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaT":544,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-bonfim-paulista/30","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Dado extraido do conteudo de paginas de busca do Trovit sobre terrenos em Bonfim Paulista; o anuncio individual especifico nao possui URL direta propria identificada nesta pesquisa (sao ~971 anuncios listados no agregador)."},{"id":29,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Lote 392m2 (de ilha, pronto para construir) - Santa Monica 2","preco":445000,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaT":392,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-bonfim-paulista/30","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Dado extraido do conteudo de paginas de busca do Trovit sobre terrenos em Bonfim Paulista; o anuncio individual especifico nao possui URL direta propria identificada nesta pesquisa (sao ~971 anuncios listados no agregador)."},{"id":30,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Lote 255m2 - Jardim San Marco","preco":274060,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaT":255,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-bonfim-paulista/30","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Dado extraido do conteudo de paginas de busca do Trovit sobre terrenos em Bonfim Paulista; o anuncio individual especifico nao possui URL direta propria identificada nesta pesquisa (sao ~971 anuncios listados no agregador)."},{"id":31,"cat":"Terreno","tipo":"Terreno em condominio","titulo":"Lote 408m2 - Terras de Bonfim","preco":224856,"mun":"Ribeirao Preto","bairro":"Bonfim Paulista","end":"Bonfim Paulista, Ribeirao Preto - SP","areaT":408,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-bonfim-paulista/30","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Dado extraido do conteudo de paginas de busca do Trovit sobre terrenos em Bonfim Paulista; o anuncio individual especifico nao possui URL direta propria identificada nesta pesquisa (sao ~971 anuncios listados no agregador)."},{"id":32,"cat":"Comercial","tipo":"Sala comercial","titulo":"Sala comercial 77m2 com garagem - Centro","preco":135000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Rua Americo Brasiliense, Centro, Ribeirao Preto - SP","areaC":77,"carac":"Condominio ~R$808/mes","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.vivareal.com.br/imovel/sala-comercial-centro-bairros-ribeirao-preto-com-garagem-77m2-venda-RS135000-id-2870001579/","fonte":"VivaReal","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":33,"cat":"Comercial","tipo":"Conjunto comercial","titulo":"Conjunto comercial 85m2 (5 salas + recepcao) - Centro","preco":180000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Centro, Ribeirao Preto - SP","areaC":85,"carac":"5 salas com armarios, recepcao, cozinha e 2 banheiros","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.vivareal.com.br/imovel/sala-comercial-centro-bairros-ribeirao-preto-85m2-venda-RS180000-id-2780570666/","fonte":"VivaReal","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":34,"cat":"Comercial","tipo":"Sala comercial","titulo":"Sala comercial 167m2 - Centro","preco":260000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Rua Americo Brasiliense, Centro, Ribeirao Preto - SP","areaC":167,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.vivareal.com.br/imovel/sala-comercial-centro-bairros-ribeirao-preto-167m2-venda-RS260000-id-2866994258/","fonte":"VivaReal","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":35,"cat":"Comercial","tipo":"Sala comercial","titulo":"Sala comercial 92m2 com garagem - Centro","preco":420000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Centro, Ribeirao Preto - SP","areaC":92,"carac":"Com garagem","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.vivareal.com.br/imovel/sala-comercial-centro-bairros-ribeirao-preto-com-garagem-92m2-venda-RS420000-id-2713501130/","fonte":"VivaReal","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":36,"cat":"Comercial","tipo":"Sala comercial","titulo":"Sala comercial 27m2 - Centro","preco":80000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Centro, Ribeirao Preto - SP","areaC":27,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.vivareal.com.br/imovel/sala-comercial-centro-bairros-ribeirao-preto-27m2-venda-RS80000-id-2873116516/","fonte":"VivaReal","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":37,"cat":"Comercial","tipo":"Loja/salao","titulo":"Loja/salao 35m2 com copa - Centro (venda ou aluguel)","mun":"Ribeirao Preto","bairro":"Centro","end":"Centro, Ribeirao Preto - SP","areaC":35,"carac":"Com copa; anunciado para venda ou aluguel","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.zapimoveis.com.br/imovel/venda-loja-salao-com-copa-centro-ribeirao-preto-sp-35m2-id-2811334513/","fonte":"Zap Imoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Preco nao informado no resumo da busca."},{"id":38,"cat":"Comercial","tipo":"Conjunto comercial","titulo":"Conjunto comercial / sala 38m2 - Centro","mun":"Ribeirao Preto","bairro":"Centro","end":"Centro, Ribeirao Preto - SP","areaC":38,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.zapimoveis.com.br/imovel/venda-conjunto-comercial-sala-centro-ribeirao-preto-sp-38m2-id-2900919942/","fonte":"Zap Imoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Preco nao informado no resumo da busca."},{"id":39,"cat":"Industrial","tipo":"Galpao","titulo":"Galpao comercial 535m2 - Parque Industrial Tanquinho (venda direta pelo proprietario)","mun":"Ribeirao Preto","bairro":"Parque Industrial Tanquinho","end":"Parque Industrial Tanquinho, Ribeirao Preto - SP","areaC":535,"tipoAnunc":"Proprietario direto (indicado no portal)","url":"https://www.olx.com.br/imoveis/comercio-e-industria/compra/estado-sp/regiao-de-ribeirao-preto/ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Sim (indicado no anuncio como venda direta pelo proprietario)","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de categoria do OLX para a regiao; anuncio especifico deve ser localizado dentro dela. Preco nao informado no resumo da busca."},{"id":40,"cat":"Industrial","tipo":"Galpao","titulo":"Galpao 288m2 - Parque Industrial Lagoinha","preco":550000,"mun":"Ribeirao Preto","bairro":"Parque Industrial Lagoinha","end":"Parque Industrial Lagoinha, Ribeirao Preto - SP","areaC":288,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.mitula.com.br/imoveis/galpoes-ribeirao-preto-parque-industrial-lagoinha","fonte":"Mitula (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":41,"cat":"Industrial","tipo":"Galpao","titulo":"Galpao 490m2 - regiao de Ribeirao Preto","preco":900000,"mun":"Ribeirao Preto","end":"Regiao de Ribeirao Preto - SP","areaC":490,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.mitula.com.br/imoveis/galpoes-ribeirao-preto-parque-industrial-lagoinha","fonte":"Mitula (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":42,"cat":"Comercial","tipo":"Galpao","titulo":"Galpao 272m2 - Jardim Cristo Redentor","preco":1150000,"mun":"Ribeirao Preto","bairro":"Jardim Cristo Redentor","end":"Jardim Cristo Redentor, Ribeirao Preto - SP","areaC":272,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.olx.com.br/imoveis/comercio-e-industria/compra/estado-sp/regiao-de-ribeirao-preto/ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de categoria do OLX para a regiao; anuncio especifico deve ser localizado dentro dela."},{"id":43,"cat":"Comercial","tipo":"Imovel comercial","titulo":"Imovel comercial - Parque Industrial Lagoinha","preco":2968000,"mun":"Ribeirao Preto","bairro":"Parque Industrial Lagoinha","end":"Parque Industrial Lagoinha, Ribeirao Preto - SP","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.olx.com.br/imoveis/comercio-e-industria/compra/estado-sp/regiao-de-ribeirao-preto/ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de categoria do OLX (9.065 resultados listados); anuncio especifico deve ser localizado dentro dela."},{"id":44,"cat":"Industrial","tipo":"Galpao","titulo":"Galpao 403m2 - Parque Industrial Avelino Alves Palma","mun":"Ribeirao Preto","bairro":"Parque Industrial Avelino Alves Palma","end":"Parque Industrial Avelino Alves Palma, Ribeirao Preto - SP","areaC":403,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://loft.com.br/home/cbr9yjie","fonte":"Loft","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Preco informado apenas por m2 (R$1.612/m2); valor total nao disponivel. Link pode levar a pagina geral do anuncio na Loft."},{"id":45,"cat":"Rural","tipo":"Fazenda","titulo":"Fazenda/Sitio - Zona Rural (cana arrendada a usina)","preco":85000000,"mun":"Ribeirao Preto","bairro":"Zona Rural","end":"Zona Rural, Ribeirao Preto - SP (~6km da cidade)","areaT":7332600,"carac":"~303 alqueires, maior parte em cana arrendada a usina; documentacao em ordem segundo o anuncio","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.vivareal.com.br/imovel/fazenda---sitio-zona-rural-bairros-ribeirao-preto-7332600m2-venda-RS85000000-id-2682182435/","fonte":"VivaReal","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Imovel de altissimo valor (>=R$50M). Anuncio publicado ha cerca de 2 anos, atualizado ha ~1 mes segundo o portal (data exata nao especificada)."},{"id":46,"cat":"Rural","tipo":"Fazenda (leilao)","titulo":"Fazenda Sao Miguel II - 1.092 hectares (leilao)","preco":175000000,"mun":"Sertaozinho","end":"Entre Sertaozinho e Pontal, proximo as rodovias Anhanguera e Bandeirantes (~35km de Ribeirao Preto)","areaT":10920000,"carac":"Pertencia a Sao Miguel Agropecuaria; arrecadada no ambito da falencia da Companhia Albertina","tipoAnunc":"Leilao judicial/massa falida","url":"https://www.novacana.com/noticias/fazenda-1092-hectares-regiao-ribeirao-preto-sp-leilao-r-175-milhoes-290824","fonte":"NovaCana (noticia/leilao)","dataPesq":"2026-10-13","situacao":"Leilao com data informada entre 1 e 16/10 (ano nao especificado na materia; publicacao parece ser de agosto/2024) - confirmar se ja ocorreu","propConf":"Nao confirmado","conf":"Media","prio":"Baixa","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Valor minimo de leilao, nao preco de anuncio comum. Exige verificacao juridica antes de qualquer prospeccao - pode ja ter sido arrematada."},{"id":47,"cat":"Rural","tipo":"Haras","titulo":"Haras 18 alqueires, totalmente plano, 8 quartos","preco":12000000,"mun":"Ribeirao Preto","end":"Regiao de Ribeirao Preto - SP","q":8,"carac":"18 alqueires, terreno totalmente plano","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/fazenda-ribeirao-preto","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit. Imovel de alto valor (>=R$10M)."},{"id":48,"cat":"Rural","tipo":"Chacara","titulo":"Chacara ~510m2","preco":295000,"mun":"Jardinopolis","end":"Jardinopolis - SP","areaT":510,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.olx.com.br/imoveis/terrenos/compra/fazendas/estado-sp/regiao-de-ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de categoria do OLX para fazendas na regiao (2.505 resultados); anuncio especifico deve ser localizado dentro dela."},{"id":49,"cat":"Rural","tipo":"Chacara","titulo":"Chacara 14.000m2 - Santa Cruz do Jose Jacques","preco":2900000,"mun":"Ribeirao Preto","bairro":"Santa Cruz do Jose Jacques","end":"Santa Cruz do Jose Jacques, Ribeirao Preto - SP","areaT":14000,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.olx.com.br/imoveis/terrenos/compra/fazendas/estado-sp/regiao-de-ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de categoria do OLX para fazendas na regiao; anuncio especifico deve ser localizado dentro dela."},{"id":50,"cat":"Rural","tipo":"Sitio","titulo":"Sitio 1.700m2 (de 15 alqueires, 13 em cana arrendada) - Condominio Vale do Piri-Pau II","preco":450000,"mun":"Ribeirao Preto","end":"Condominio Vale do Piri-Pau II, proximo ao Rio Pardo, regiao de Ribeirao Preto - SP","areaT":1700,"carac":"15 alqueires totais, 13 em cana arrendada","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/fazenda-s%C3%A3o-jos%C3%A9-ribeir%C3%A3o-preto","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit; anuncio individual sem link direto proprio identificado nesta pesquisa."},{"id":51,"cat":"Rural","tipo":"Chacara","titulo":"Chacara - Condominio Portal dos Ipes","preco":1100000,"mun":"Ribeirao Preto","bairro":"Portal dos Ipes","end":"Condominio Portal dos Ipes, Ribeirao Preto - SP","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/fazenda-portal-ip%C3%AAs-ribeir%C3%A3o-preto","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Faixa de preco informada na busca: R$1,1 a R$1,5 milhoes; valor exato nao especificado (usado o limite inferior da faixa)."},{"id":52,"cat":"Rural","tipo":"Fazenda","titulo":"Fazenda de cana-de-acucar - 317 alqueires (arrendada ate 2028)","preco":100000000,"mun":"Araraquara","end":"Araraquara - SP","carac":"98% de aproveitamento em cana-de-acucar; arrendada com contrato vigente ate 2028","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.mfrural.com.br/busca/fazendas-cana/estado/sao-paulo","fonte":"MF Rural (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do MF Rural para o estado de SP. Imovel de altissimo valor (>=R$50M)."},{"id":53,"cat":"Rural","tipo":"Fazenda","titulo":"Fazenda - Gaviao Peixoto","preco":240000000,"mun":"Gaviao Peixoto","end":"Gaviao Peixoto - SP (regiao de Araraquara)","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.olx.com.br/imoveis/terrenos/compra/fazendas/estado-sp/regiao-de-ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Baixa","prio":"Media","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Gaviao Peixoto nao esta na lista de cidades prioritarias mas e proxima a Araraquara/regiao; confirmar relevancia geografica antes de prospectar. Valor extremamente alto - verificar com cautela."},{"id":54,"cat":"Rural","tipo":"Fazenda","titulo":"Fazenda - Cassia dos Coqueiros","preco":8300000,"mun":"Cassia dos Coqueiros","end":"Cassia dos Coqueiros - SP (Regiao Metropolitana de Ribeirao Preto)","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.olx.com.br/imoveis/terrenos/compra/fazendas/estado-sp/regiao-de-ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente - nenhum canal localizado nesta rodada","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de categoria do OLX; anuncio especifico deve ser localizado dentro dela. Imovel de alto valor (>=R$5M)."},{"id":55,"cat":"Comercial","tipo":"Predio comercial inteiro","titulo":"Predio inteiro 800m2 - Centro (Rua Barao do Amazonas) - ideal para restaurante/alimentacao","preco":2700000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Rua Barao do Amazonas, Centro, Ribeirao Preto - SP","areaC":800,"carac":"Esquina, 7 banheiros, mezanino, balcao, cozinha, cofre","tipoAnunc":"Anunciante nao identificado - ver anuncio","tel":"(16) 99756-XXXX (numero incompleto no anuncio)","url":"https://www.zapimoveis.com.br/imovel/venda-predio-centro-ribeirao-preto-sp-800m2-id-2894506780/","fonte":"Zap Imoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Telefone parcial (portal)","validacao":"Telefone parcialmente visivel no anuncio: (16) 99756-XXXX (4 ultimos digitos mascarados)","prox":"Abrir o anuncio no Zap Imoveis para obter os 4 digitos finais e confirmar via WhatsApp","obs":"Possivel duplicata/cross-post: anuncio quase identico de 765m2 pelo mesmo preco (R$2.700.000) aparece no VivaReal (https://www.vivareal.com.br/imovel/imovel-comercial-centro-bairros-ribeirao-preto-765m2-venda-RS2700000-id-2902436002/) com telefone de DDD diferente (11) - confirmar qual anuncio e o correto antes de prospectar, pode ser erro de cadastro do anunciante ou imoveis distintos na mesma rua."},{"id":56,"cat":"Comercial","tipo":"Predio comercial","titulo":"Predio comercial 268m2 (6 salas/consultorios) - Rua Rui Barbosa","preco":700000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Rua Rui Barbosa, Centro, Ribeirao Preto - SP","areaC":268,"carac":"6 salas hoje usadas como consultorios, 4 banheiros sociais, 3 vagas. Codigo do anuncio: PR0036","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.vivareal.com.br/imovel/predio-comercial-centro-bairros-ribeirao-preto-com-garagem-268m2-venda-RS700000-id-2901235015/","fonte":"VivaReal","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Ha um segundo anuncio quase identico (mesmo codigo PR0036, mesmo preco e metragem) com outro ID: https://www.vivareal.com.br/imovel/predio-comercial-centro-bairros-ribeirao-preto-com-garagem-268m2-venda-RS700000-id-2901134397/ - provavel duplicata do mesmo imovel/imobiliaria, contar como um unico imovel."},{"id":57,"cat":"Comercial","tipo":"Predio comercial","titulo":"Predio comercial 551m2 - Rua Rui Barbosa","preco":4600000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Rua Rui Barbosa, Centro, Ribeirao Preto - SP","areaC":551,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.vivareal.com.br/imovel/predio-comercial-centro-bairros-ribeirao-preto-com-garagem-551m2-venda-RS4600000-id-2826680835/","fonte":"VivaReal","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Imovel de alto valor (>=R$1M, perto do limiar de alto padrao comercial)."},{"id":58,"cat":"Comercial","tipo":"Predio comercial","titulo":"Imovel 672m2, 23 salas, 5 WCs - Centro","preco":1900000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Centro, Ribeirao Preto - SP","areaC":672,"carac":"23 salas, 5 banheiros sociais","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.zapimoveis.com.br/imovel/venda-casa-centro-ribeirao-preto-sp-672m2-id-2872869425/","fonte":"Zap Imoveis","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Media","tipoContato":"Pendente","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":59,"cat":"Comercial","tipo":"Sala comercial","titulo":"Sala comercial 518m2 - Centro","preco":3000000,"mun":"Ribeirao Preto","bairro":"Centro","end":"Centro, Ribeirao Preto - SP","areaC":518,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://www.chavesnamao.com.br/imovel/sala-comercial-a-venda-sp-ribeirao-preto-centro-518m2-RS3000000/id-17835770/","fonte":"Chaves na Mao","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Alta","prio":"Alta","tipoContato":"Pendente","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"Nova fonte explorada nesta rodada (Chaves na Mao); nao havia sido usada na Rodada 1."},{"id":60,"cat":"Terreno","tipo":"Area comercial","titulo":"Area comercial 2.931m2 - Avenida Caramuru, Zona Sul","preco":7350000,"mun":"Ribeirao Preto","bairro":"Zona Sul","end":"Avenida Caramuru, Zona Sul, Ribeirao Preto - SP","areaT":2931,"carac":"Localizacao estrategica","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-mesorregi%C3%A3o-ribeir%C3%A3o-preto/95","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Trovit; anuncio individual sem link direto proprio identificado. Imovel de alto valor (>=R$5M)."},{"id":61,"cat":"Terreno","tipo":"Terreno residencial/comercial","titulo":"Lote 304m2 - Residencial Florida","preco":340000,"mun":"Ribeirao Preto","bairro":"Residencial Florida","end":"Residencial Florida, Ribeirao Preto - SP","areaT":304,"anunciante":"JFC Imobiliaria","tipoAnunc":"Imobiliaria/Corretor","empresa":"JFC Imobiliaria","url":"https://imoveis.trovit.com.br/terreno-mesorregi%C3%A3o-ribeir%C3%A3o-preto/95","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Media","tipoContato":"Imobiliaria nomeada (JFC Imobiliaria) - contato nao localizado nesta rodada","validacao":"Nome da imobiliaria identificado; telefone/site nao confirmados","prox":"Buscar 'JFC Imobiliaria Ribeirao Preto' + CRECI em nova rodada","obs":"Nova imobiliaria identificada nesta rodada (JFC Imobiliaria) - ver aba Imobiliarias e corretores."},{"id":62,"cat":"Terreno","tipo":"Terreno residencial","titulo":"Lote 280m2 - Residencial Florida (Cod: 74816SV)","preco":300000,"mun":"Ribeirao Preto","bairro":"Residencial Florida","end":"Residencial Florida, Ribeirao Preto - SP","areaT":280,"carac":"Codigo do anuncio: 74816SV","tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.trovit.com.br/terreno-mesorregi%C3%A3o-ribeir%C3%A3o-preto/95","fonte":"Trovit (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Baixa","tipoContato":"Pendente","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal"},{"id":63,"cat":"Industrial","tipo":"Galpao","titulo":"Galpao 5.200m2 - regiao de Ribeirao Preto","preco":16000000,"mun":"Ribeirao Preto","end":"Regiao de Ribeirao Preto - SP","areaC":5200,"tipoAnunc":"Anunciante nao identificado - ver anuncio","url":"https://imoveis.mitula.com.br/imoveis/galpoes-sul-brasil","fonte":"Mitula (agregador)","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Nao confirmado","conf":"Media","prio":"Alta","tipoContato":"Pendente","validacao":"Nao verificado","prox":"Abrir URL_Anuncio e usar o botao de contato do portal","obs":"URL e da pagina de busca do Mitula; o proprio resumo da busca alertou para metragens/datas inconsistentes entre anuncios - confirmar diretamente antes de prospectar. Imovel de altissimo valor (>=R$10M)."},{"id":64,"cat":"Terreno","tipo":"Terreno","titulo":"Terreno 272m2 - Altos do Campo (venda direta pelo proprietario)","preco":156000,"mun":"Araraquara","bairro":"Altos do Campo","end":"Altos do Campo, Araraquara - SP","areaT":272,"tipoAnunc":"Proprietario direto (indicado no portal)","url":"https://www.olx.com.br/imoveis/estado-sp/regiao-de-ribeirao-preto/araraquara","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Sim (indicado no anuncio como venda direta pelo proprietario)","conf":"Media","prio":"Media","tipoContato":"Direto com o proprietario (via anuncio OLX)","validacao":"Classificacao do portal, telefone nao exposto no resumo","prox":"Abrir o anuncio no OLX para obter telefone/whatsapp do proprietario","obs":"URL e da pagina de categoria do OLX para Araraquara; anuncio especifico deve ser localizado dentro dela."},{"id":65,"cat":"Rural","tipo":"Chacara","titulo":"Chacara 2.500m2 - Santa Cruz da Esperanca (venda direta pelo proprietario)","preco":550000,"mun":"Santa Cruz da Esperanca","end":"Santa Cruz da Esperanca - SP","areaT":2500,"tipoAnunc":"Proprietario direto (indicado no portal)","url":"https://www.olx.com.br/imoveis/estado-sp/regiao-de-ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Sim (indicado no anuncio como venda direta pelo proprietario)","conf":"Media","prio":"Media","tipoContato":"Direto com o proprietario (via anuncio OLX)","validacao":"Classificacao do portal, telefone nao exposto no resumo","prox":"Abrir o anuncio no OLX para obter telefone/whatsapp do proprietario","obs":"Santa Cruz da Esperanca nao estava na lista original de cidades prioritarias, mas e parte da regiao metropolitana de Ribeirao Preto. URL e da pagina de categoria regional do OLX."},{"id":66,"cat":"Rural","tipo":"Chacara/Rancho","titulo":"Chacara/rancho 7.000m2 - Serra Azul (venda direta pelo proprietario)","preco":330000,"mun":"Serra Azul","end":"Serra Azul - SP","areaT":7000,"tipoAnunc":"Proprietario direto (indicado no portal)","url":"https://www.olx.com.br/imoveis/estado-sp/regiao-de-ribeirao-preto","fonte":"OLX","dataPesq":"2026-10-13","situacao":"Ativo no portal (verificado via busca em 2026-10-13)","propConf":"Sim (indicado no anuncio como venda direta pelo proprietario)","conf":"Media","prio":"Media","tipoContato":"Direto com o proprietario (via anuncio OLX)","validacao":"Classificacao do portal, telefone nao exposto no resumo","prox":"Abrir o anuncio no OLX para obter telefone/whatsapp do proprietario","obs":"Serra Azul nao estava na lista original de cidades prioritarias, mas e parte da regiao metropolitana de Ribeirao Preto. URL e da pagina de categoria regional do OLX."}];
+  var IMOB = [{"nome":"KF Negocios Imobiliarios (KF Imoveis RP)","creci":"101264-F-SP","end":"Av. Independencia, 522, Sala 01, Centro, Ribeirao Preto - SP","whats":"(16) - (mascarado em todos os anuncios encontrados)","site":"https://www.kfimoveis.com.br","redes":"https://www.instagram.com/kfimoveis.rp (Facebook: kfimoveis.rp; tambem possui canal no YouTube)","ids":"9, 16","conf":"Alta","valid":"Canal oficial confirmado (site + redes sociais + CRECI + endereco); telefone continua mascarado","data":"2026-10-13","obs":"Empresa anuncia na Wimoveis e no Zap desde 2018 segundo os proprios anuncios. Melhor canal de abordagem nesta rodada: site oficial ou Instagram."},{"nome":"Rosa & Rangel Consultoria e Assessoria Imobiliaria","creci":"25048-J-SP","end":"Rua Horacio Pessini, Ribeirao Preto - SP","site":"https://www.rosaerangel.com.br","ids":"(nenhum da base atual - listagens gerais em Bonfim Paulista)","conf":"Media","valid":"Site oficial e CRECI localizados; telefone/whatsapp nao obtidos nesta rodada","data":"2026-10-13","obs":"Anuncia desde 2018 segundo o Zap Imoveis. Abrir o site oficial diretamente para obter telefone."},{"nome":"Imobiliaria Sonia & Ramalho","creci":"21608-J-SP","end":"Av. Costabile Romano, 1451, Ribeirania, Ribeirao Preto - SP","tel":"(16) 4009-.... (parcial, mascarado no Zap)","whats":"(16) - (mascarado na Wimoveis)","ids":"(nenhum da base atual - listagens gerais em Bonfim Paulista)","conf":"Media","valid":"Endereco, CRECI e corretor nomeado identificados; telefone parcial apenas","data":"2026-10-13","obs":"Corretor citado nos anuncios: Jonathan Ramalho. Abrir anuncio na Wimoveis/Zap para completar o telefone."},{"nome":"JFC Imobiliaria","ids":"61","conf":"Baixa","valid":"Apenas o nome foi identificado (citado em anuncio do Trovit); nenhum outro dado confirmado","data":"2026-10-13","obs":"Pesquisar nome completo + CRECI em rodada futura."},{"nome":"Acqua Imobiliaria","ids":"7","conf":"Baixa","valid":"Nome informado pelo anuncio da Wimoveis; nao localizada em nenhuma busca externa nesta rodada","data":"2026-10-13","obs":"Nome comum/generico - dificulta busca isolada. Melhor via: abrir o anuncio original na Wimoveis."},{"nome":"RP Imoveis","ids":"8","conf":"Baixa","valid":"Nome informado pelo anuncio da Wimoveis; nao localizada em nenhuma busca externa nesta rodada (nome muito generico)","data":"2026-10-13","obs":"Melhor via: abrir o anuncio original na Wimoveis e usar 'Contate o anunciante'."},{"nome":"Imobiliaria Brioni","ids":"(nenhum da base atual)","conf":"Baixa","valid":"Citada em anuncio de terreno (Rodada 1) via Trovit; nao localizada em busca externa","data":"2026-10-13","obs":"Pesquisar nome completo em rodada futura."}];
+  var FONTES = [{"fonte":"Zap Imoveis","tipo":"Portal primario","url":"https://www.zapimoveis.com.br","cidades":"Ribeirao Preto","cats":"Residencial, Comercial","data":"2026-10-13","n":5,"lim":"WebFetch indisponivel nesta sessao (falha de rede); dados vieram apenas do resumo de busca, sem abrir anuncios individuais."},{"fonte":"VivaReal","tipo":"Portal primario","url":"https://www.vivareal.com.br","cidades":"Ribeirao Preto","cats":"Comercial, Rural","data":"2026-10-13","n":6,"lim":"Idem acima. Telefone/whatsapp nunca aparecem no resumo de busca (ficam atras de botao na pagina do anuncio)."},{"fonte":"Wimoveis","tipo":"Portal primario","url":"https://www.wimoveis.com.br","cidades":"Ribeirao Preto (Bonfim Paulista, Lagoinha)","cats":"Residencial (coberturas, casas alto padrao), Terreno","data":"2026-10-13","n":5,"lim":"Nome da imobiliaria aparece em alguns anuncios; telefone/CRECI nao aparecem no resumo de busca."},{"fonte":"Loft","tipo":"Portal primario","url":"https://loft.com.br","cidades":"Ribeirao Preto","cats":"Residencial, Industrial","data":"2026-10-13","n":3,"lim":"Varios anuncios so trazem preco por m2, nao valor total, no resumo de busca."},{"fonte":"OLX","tipo":"Classificados (inclui venda direta)","url":"https://www.olx.com.br","cidades":"Ribeirao Preto e regiao","cats":"Rural, Comercial/Industrial","data":"2026-10-13","n":6,"lim":"So foi possivel acessar paginas de categoria (totais de milhares de resultados), nao anuncios individuais - WebFetch bloqueado nesta sessao."},{"fonte":"Trovit (agregador)","tipo":"Agregador de anuncios","url":"https://imoveis.trovit.com.br","cidades":"Ribeirao Preto, Bonfim Paulista, Batatais","cats":"Residencial, Terreno, Rural","data":"2026-10-13","n":15,"lim":"Maior fonte de dados desta pesquisa, mas paginas sao de resultados paginados; nao ha link direto para o anuncio individual especifico na maioria dos casos."},{"fonte":"Mitula (agregador)","tipo":"Agregador de anuncios","url":"https://imoveis.mitula.com.br","cidades":"Ribeirao Preto","cats":"Industrial","data":"2026-10-13","n":2,"lim":"Mesma limitacao do Trovit quanto a link individual."},{"fonte":"Nestoria (agregador)","tipo":"Agregador de anuncios","url":"https://www.nestoria.com.br","cidades":"Batatais","cats":"Residencial","data":"2026-10-13","n":1,"lim":"Idem Trovit/Mitula."},{"fonte":"Casa Mineira (agregador)","tipo":"Agregador/portal regional","url":"https://www.casamineira.com.br","cidades":"Ribeirao Preto (Jardim Sumare, Bonfim Paulista)","cats":"Residencial","data":"2026-10-13","n":4,"lim":"Idem Trovit/Mitula."},{"fonte":"MF Rural (agregador)","tipo":"Classificados rurais","url":"https://www.mfrural.com.br","cidades":"Araraquara, Ribeirao Preto (busca ampla)","cats":"Rural","data":"2026-10-13","n":1,"lim":"Varios resultados para 'Ribeirao Preto' eram na verdade fazendas no Uruguai (erro de cadastro do anunciante/plataforma) - excluidos da base. Verificar sempre a localizacao real antes de prospectar."},{"fonte":"NovaCana / ComprerRural (noticia)","tipo":"Noticia / leilao judicial","url":"https://www.novacana.com","cidades":"Sertaozinho/Pontal","cats":"Rural (leilao)","data":"2026-10-13","n":1,"lim":"Data do leilao pode ja ter passado (materia parece ser de 2024); confirmar status antes de qualquer contato."},{"fonte":"Leilao Imovel","tipo":"Leiloeiro / leilao judicial","url":"https://www.leilaoimovel.com.br","cidades":"Batatais","cats":"Residencial (leilao)","data":"2026-10-13","n":1,"lim":"Imovel ocupado; leiloes exigem due diligence juridica propria, fora do escopo desta pesquisa comercial."},{"fonte":"Guia Facil (diretorio)","tipo":"Diretorio de telefones/empresas","url":"https://guiafacil.com","cidades":"Ribeirao Preto","cats":"Imobiliarias (contato institucional)","data":"2026-10-13","n":0,"lim":"Retornou nomes de imobiliarias (Athenas, Brasil Brokers, Dinamik Negocios, Boa Vista Imoveis, Archangelo Imoveis, Felizardo Imoveis, C R Imoveis, Caixe Imoveis, Navarro Imoveis, JC Imoveis, Datcopy Imobiliaria, Estacao Imoveis) mas os proprios resultados indicaram telefones inconsistentes/nao confirmados entre paginas e cidades - NAO incluidos na base por falta de confianca. Recomenda-se confirmar cada numero diretamente no site ou Google Meu Negocio da imobiliaria antes de qualquer contato."},{"fonte":"Chaves na Mao","tipo":"Portal primario","url":"https://www.chavesnamao.com.br","cidades":"Ribeirao Preto","cats":"Comercial","data":"2026-10-13","n":1,"lim":"Fonte nova nesta rodada, nao usada na Rodada 1. Mesmo problema de telefone mascarado."},{"fonte":"Busca por nome de imobiliaria ('X Imoveis' + telefone/whatsapp/site)","tipo":"Metodologia de enriquecimento","url":"-","cidades":"Ribeirao Preto","cats":"Todas (Frente B)","data":"2026-10-13","n":0,"lim":"Permitiu confirmar CRECI, endereco, site e redes sociais de 3 imobiliarias (KF Negocios Imobiliarios, Rosa & Rangel, Sonia & Ramalho), mas nao obteve nenhum telefone completo - os proprios anuncios mascaram o numero ('(16) -', '(16) 4009-....') independentemente da fonte consultada. Esta foi a tecnica mais produtiva da Rodada 2 para identificar responsaveis, mesmo sem telefone completo."}];
+  var NOTAS = ["LIMITACAO TECNICA CRITICA: a ferramenta de navegacao direta a paginas (WebFetch) nao funcionou em nenhuma tentativa nesta sessao (falha de resolucao de rede, inclusive em dominio de teste neutro) - nao foi possivel abrir anuncios individuais para extrair telefone, WhatsApp, e-mail ou CRECI especificos. Toda a coleta foi feita a partir dos resumos gerados pela ferramenta de busca, que explicitamente informou, em varias consultas, que numeros de telefone e WhatsApp ficam mascarados/incompletos nas paginas de resultado e so aparecem ao abrir o anuncio e clicar em 'ver telefone' ou 'contate o anunciante'.","Por isso, os campos Telefone_Comercial, WhatsApp_Comercial, Email_Comercial e CRECI estao vazios na quase totalidade dos registros. Nenhum numero, e-mail ou CRECI foi inventado para preencher essas celulas. Para obter esses dados, e necessario abrir manualmente cada URL_Anuncio listada (ou rodar uma nova sessao com acesso de navegacao funcional) e usar o botao de contato de cada portal.","Nomes de imobiliarias de Ribeirao Preto foram encontrados em um diretorio (Guia Facil), mas os proprios resultados da busca indicaram inconsistencia de numeros entre paginas/cidades - esses contatos NAO foram incluidos na base por falta de confianca suficiente. Ver aba 'Fontes e auditoria', linha Guia Facil, para a lista de nomes encontrados (sem telefone confirmado).","Registros com Confianca_Dados 'Media' tem seus valores de preco/area/localizacao extraidos de conteudo real de paginas de agregadores (Trovit, Mitula, Nestoria, Casa Mineira, MF Rural), mas a pesquisa nao conseguiu obter o link direto e unico do anuncio especifico - o campo URL_Anuncio aponta para a pagina de busca/categoria onde a informacao foi encontrada. Para chegar ao anuncio exato, e preciso abrir esse link e localizar o imovel pela descricao.","Cidades da lista original sem nenhum registro confiavel encontrado nesta sessao: Sertaozinho (exceto o item de leilao), Cravinhos, Serrana, Jaboticabal, Franca, Sao Carlos, Barretos, Bebedouro e Orlandia. Buscas foram feitas para essas cidades, mas retornaram resultados insuficientes, misturados com outras localidades (ex.: 'Sertaozinho' em alguns portais correspondia a um bairro de Maua-SP, no Grande ABC, e foi corretamente excluido da base) ou apenas dados agregados de mercado (CRECISP), sem anuncios individuais.","Nenhuma oferta real de venda de hotel, pousada, clinica ou hospital foi encontrada nesta sessao - as buscas retornaram apenas paginas de reserva de hospedagem ou paginas institucionais de hospitais publicos. Esse nicho provavelmente exige contato direto com corretores especializados em hotelaria/saude, fora do alcance de busca generica.","A meta de 20 imoveis por nicho (conforme solicitado) NAO foi atingida em nenhuma categoria nesta sessao unica. Os totais reais por categoria estao no painel. Trate este arquivo como uma primeira base de trabalho, nao como cobertura completa do mercado.","Todos os dados vem de anuncios e paginas publicas. Isso NAO equivale a autorizacao do proprietario ou da imobiliaria para republicacao em outro site, nem a autorizacao para intermediar a venda e receber comissao. Os campos Autorizacao_Divulgacao ('Nao solicitada') e Comissao_Negociada (vazio) refletem que nenhum contato comercial foi feito nesta pesquisa - esse e o proximo passo, na aba 'Controle de prospeccao'.","Antes de negociar qualquer remuneracao por intermediacao de venda (em vez de apenas divulgacao/publicidade), confirme os requisitos legais do CRECISP e se e necessario registro de corretor (CRECI) para a atividade pretendida.","Varios imoveis ficaram sem Preco_Anunciado porque o resumo da busca so trouxe o valor por m2, nao o total - nenhum total foi calculado/estimado para evitar inserir um numero nao confirmado pela fonte.","RODADA 2: a ferramenta de navegacao direta a paginas (WebFetch) continuou indisponivel (mesma falha tecnica de rede da Rodada 1, testada novamente no inicio desta sessao). Toda a Frente B (busca de contatos) foi feita por busca indexada, cruzando nome do anunciante/imobiliaria com termos como telefone, whatsapp, CRECI, site oficial e redes sociais, exatamente como solicitado.","RODADA 2 - resultado da Frente B: as 3 imobiliarias mais citadas na Rodada 1 (Acqua Imobiliaria, RP Imoveis, KF Negocios Imobiliarios) foram pesquisadas pelo nome. Apenas a KF foi localizada com confianca (site kfimoveis.com.br, Instagram @kfimoveis.rp, CRECI 101264-F-SP, endereco fisico) - nomes como 'Acqua Imobiliaria' e 'RP Imoveis' sao demasiado genericos e nao retornaram correspondencia confiavel em busca externa. Em contrapartida, a pesquisa revelou duas outras imobiliarias ativas na regiao (Rosa & Rangel, CRECI 25048-J-SP; Sonia & Ramalho, CRECI 21608-J-SP) com site/endereco/CRECI confirmados, mesmo sem imovel especifico da base vinculado a elas ainda.","RODADA 2 - telefone completo continua indisponivel para praticamente todos os registros: em pelo menos 4 verificacoes diretas (KF, Sonia & Ramalho, e dois predios comerciais), o numero aparece mascarado tanto no portal de origem quanto em buscas externas ('(16) -', '(16) 4009-....', '(16) 99756-XXXX'). A unica exceira parcial e o Predio 800m2 do Centro (ID 55), com DDD e primeiros 5 digitos visiveis.","RODADA 2 - meta de 20 registros com canal comercial verificavel NAO foi atingida. Canais comerciais verificaveis diretamente ligados a um ou mais imoveis da base: 3 (KF Negocios Imobiliarios, ligada aos imoveis 9 e 16; e o telefone parcial do imovel 55). Mais 2 imobiliarias (Rosa & Rangel e Sonia & Ramalho) foram verificadas com CRECI/site/endereco mas ainda sem imovel especifico da base vinculado - ficam registradas na aba 'Imobiliarias e corretores' para uso em prospeccoes futuras. O motivo principal e estrutural: os proprios portais (Wimoveis, Zap, VivaReal) mascaram o telefone no texto publico e exigem o clique no botao 'Contate o anunciante' dentro da pagina do anuncio - acesso que esta ferramenta nao conseguiu ter nesta sessao.","RODADA 2 - novos imoveis diretos de proprietario: 3 adicionados (terreno em Araraquara, chacara em Santa Cruz da Esperanca, chacara/rancho em Serra Azul), todos classificados pelo OLX como 'Direto com o proprietario'. Essa classificacao do portal nao e, por si so, um canal de contato confirmado - o numero so aparece dentro do anuncio.","RODADA 2 - novas cidades com pelo menos um registro: Araraquara (terreno direto do proprietario), Santa Cruz da Esperanca e Serra Azul (ambas fora da lista original de cidades prioritarias, mas dentro da regiao metropolitana de Ribeirao Preto). Jaboticabal, Orlandia, Bebedouro, Franca, Sao Carlos, Barretos, Serrana, Cravinhos e Sertaozinho (fora do item de leilao) continuam sem registro confiavel - as buscas desta rodada para Franca nao retornaram nenhum resultado utilizavel.","RODADA 2 - nenhuma oferta de venda de posto de combustivel, escola, clinica/consultorio completo, hotel/pousada ou shopping center foi encontrada como imovel disponivel para compra direta por um pequeno investidor. O unico dado relacionado a 'centro comercial' encontrado foi a venda institucional de uma participacao de 20% no RibeiraoShopping (Previ para o FII da Vinci Shopping Centers, ~R$150,6 milhoes) e vendas de terrenos vizinhos pela Multiplan - sao operacoes societarias/institucionais entre empresas listadas em bolsa, sem proprietario individual contatavel, e por isso NAO foram incluidas como linha na base (fora do escopo de prospeccao de pequenos proprietarios).","Nenhum numero de telefone, whatsapp ou e-mail foi completado por suposicao nesta rodada. Onde o portal mostrou um numero parcial, ele foi registrado exatamente como aparece (com os digitos faltantes marcados como 'XXXX' ou '....'), nunca preenchido."];
+
+  var TKEY = "base-pesquisa-track-v1";
+  var STATUS = ["Não iniciado", "Contatado", "Respondeu", "Negociando", "Descartado"];
+  var $ = function (id) { return document.getElementById(id); };
+  var track = loadTrack();
+
+  var nf = new Intl.NumberFormat("pt-BR");
+  var brl0 = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function isUrl(s) { return /^https?:\/\//i.test(String(s)); }
+  function link(url, label) {
+    return '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(label || url) + "</a>";
+  }
+  /* transforma URLs dentro de um texto em links */
+  function linkify(text) {
+    return esc(text).replace(/(https?:\/\/[^\s<]+)/g, function (u) {
+      return '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + "</a>";
+    });
+  }
+
+  function loadTrack() { try { return JSON.parse(localStorage.getItem(TKEY)) || {}; } catch (e) { return {}; } }
+  function saveTrack() {
+    try { localStorage.setItem(TKEY, JSON.stringify(track)); }
+    catch (e) { window.__toast && window.__toast("Não foi possível salvar as marcações."); }
+  }
+  function tr(id) { return track[id] || { fav: false, status: STATUS[0], nota: "" }; }
+  function setTr(id, patch) {
+    var cur = tr(id);
+    track[id] = Object.assign({ fav: cur.fav, status: cur.status, nota: cur.nota }, patch);
+    saveTrack();
+  }
+  window.BaseApp = {
+    getTrack: function () { return track; },
+    setTrack: function (t) { track = t || {}; saveTrack(); renderBase(); }
+  };
+
+  /* ---------- formatadores ---------- */
+  function precoCurto(v) {
+    if (v == null) return "Preço não informado";
+    if (v >= 1e6) {
+      var m = v / 1e6, t = m >= 100 ? String(Math.round(m)) : String(Math.round(m * 10) / 10);
+      return "R$ " + t.replace(".", ",") + " mi";
+    }
+    return brl0.format(v);
+  }
+  function fmtArea(m2) {
+    if (m2 == null) return "";
+    if (m2 >= 100000) return nf.format(Math.round(m2 / 10000)) + " ha";
+    return nf.format(m2) + " m²";
+  }
+  function plural(n, s, p) { return n + " " + (n === 1 ? s : p); }
+  function metaAreas(p) {
+    var a = [];
+    if (p.areaT != null) a.push("Terreno " + fmtArea(p.areaT));
+    if (p.areaC != null) a.push("Construída " + fmtArea(p.areaC));
+    if (p.q != null) a.push(plural(p.q, "quarto", "quartos"));
+    if (p.s != null) a.push(plural(p.s, "suíte", "suítes"));
+    if (p.v != null) a.push(plural(p.v, "vaga", "vagas"));
+    return a.join(" · ");
+  }
+  function prioLabel(x) { return x === "Media" ? "média" : (x || "").toLowerCase(); }
+  function isDireto(p) { return /^Proprietario direto/i.test(p.tipoAnunc || ""); }
+
+  /* ---------- filtros ---------- */
+  function fillSelect(sel, label, values) {
+    sel.innerHTML = '<option value="">' + label + "</option>" + values.map(function (v) {
+      return '<option value="' + esc(v) + '">' + esc(v) + "</option>";
+    }).join("");
+  }
+  function uniq(key) {
+    var seen = {}, out = [];
+    BASE.forEach(function (p) { var v = p[key]; if (v && !seen[v]) { seen[v] = 1; out.push(v); } });
+    return out.sort(function (a, b) { return a.localeCompare(b, "pt-BR"); });
+  }
+  fillSelect($("bCat"), "Todas as categorias", uniq("cat"));
+  fillSelect($("bMun"), "Todos os municípios", uniq("mun"));
+  fillSelect($("bFonte"), "Todas as fontes", uniq("fonte"));
+  $("countBase").textContent = BASE.length;
+
+  function passaPreco(p, f) {
+    var v = p.preco;
+    switch (f) {
+      case "faixa": return v != null && v >= 200000 && v <= 1e9;
+      case "ate200": return v != null && v < 200000;
+      case "200-1": return v != null && v >= 200000 && v < 1e6;
+      case "1-5": return v != null && v >= 1e6 && v < 5e6;
+      case "5-50": return v != null && v >= 5e6 && v < 50e6;
+      case "50+": return v != null && v >= 50e6;
+      case "sem": return v == null;
+      default: return true;
+    }
+  }
+  var PRIO = { Alta: 0, Media: 1, Baixa: 2 };
+
+  function renderStats() {
+    var alto = BASE.filter(function (p) { return p.preco != null && p.preco >= 5e6; }).length;
+    var diretos = BASE.filter(isDireto).length;
+    var semPreco = BASE.filter(function (p) { return p.preco == null; }).length;
+    var favs = BASE.filter(function (p) { return tr(p.id).fav; }).length;
+    function s(n, l) { return '<div class="stat"><b>' + n + "</b><span>" + l + "</span></div>"; }
+    $("baseStats").innerHTML = s(BASE.length, "imóveis na base") + s(alto, "a partir de R$ 5 mi") +
+      s(diretos, "venda direta (proprietário)") + s(semPreco, "sem preço informado") + s(favs, "favoritos");
+  }
+
+  function renderBase() {
+    var q = $("bBusca").value.trim().toLowerCase();
+    var cat = $("bCat").value, mun = $("bMun").value, fonte = $("bFonte").value,
+        faixa = $("bPreco").value, prio = $("bPrio").value, ord = $("bOrdem").value,
+        soDireto = $("bDireto").checked, soFav = $("bFav").checked, soAcomp = $("bAcomp").checked;
+
+    var itens = BASE.filter(function (p) {
+      if (cat && p.cat !== cat) return false;
+      if (mun && p.mun !== mun) return false;
+      if (fonte && p.fonte !== fonte) return false;
+      if (prio && p.prio !== prio) return false;
+      if (!passaPreco(p, faixa)) return false;
+      if (soDireto && !isDireto(p)) return false;
+      var t = tr(p.id);
+      if (soFav && !t.fav) return false;
+      if (soAcomp && t.status === STATUS[0]) return false;
+      if (q) {
+        var hay = [p.titulo, p.tipo, p.bairro, p.mun, p.end, p.carac, p.obs, p.empresa].join(" ").toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    itens.sort(function (a, b) {
+      if (ord === "menor" || ord === "maior") {
+        if (a.preco == null && b.preco == null) return a.id - b.id;
+        if (a.preco == null) return 1;
+        if (b.preco == null) return -1;
+        return ord === "menor" ? a.preco - b.preco : b.preco - a.preco;
+      }
+      if (ord === "prio") {
+        var d = (PRIO[a.prio] != null ? PRIO[a.prio] : 3) - (PRIO[b.prio] != null ? PRIO[b.prio] : 3);
+        return d || a.id - b.id;
+      }
+      if (ord === "nome") return a.titulo.localeCompare(b.titulo, "pt-BR");
+      return a.id - b.id;
+    });
+
+    $("bResult").textContent = "Mostrando " + itens.length + " de " + BASE.length + " imóveis";
+    if (!itens.length) {
+      $("baseList").innerHTML = '<div class="empty">Nenhum imóvel com esses filtros. Tente limpar alguns deles.</div>';
+    } else {
+      $("baseList").innerHTML = itens.map(function (p) {
+        var t = tr(p.id);
+        var local = [p.bairro, p.mun].filter(Boolean).join(", ");
+        var tags = "";
+        if (isDireto(p)) tags += '<span class="tag hot">Proprietário direto</span>';
+        if (p.prio) tags += '<span class="tag">Prioridade ' + esc(prioLabel(p.prio)) + "</span>";
+        if (p.fonte) tags += '<span class="tag">' + esc(p.fonte) + "</span>";
+        if (t.status !== STATUS[0]) tags += '<span class="tag hot">' + esc(t.status) + "</span>";
+        if (t.nota) tags += '<span class="tag">Com anotação</span>';
+        return '<article class="pcard" style="--cc:var(--c-' + esc(p.cat) + ')" tabindex="0" role="button" data-open="' + p.id + '" aria-label="Ver detalhes: ' + esc(p.titulo) + '">' +
+          '<div class="ptop"><span class="cat">' + esc(p.cat) + '</span>' +
+          '<button class="star" data-fav="' + p.id + '" aria-pressed="' + (t.fav ? "true" : "false") + '" aria-label="Favoritar">&#9733;</button></div>' +
+          "<h3>" + esc(p.titulo) + "</h3>" +
+          '<div class="pprice' + (p.preco == null ? " none" : "") + '">' + precoCurto(p.preco) + "</div>" +
+          '<p class="meta">' + esc(local) + "</p>" +
+          (metaAreas(p) ? '<p class="meta">' + esc(metaAreas(p)) + "</p>" : "") +
+          '<div class="tags">' + tags + "</div></article>";
+      }).join("");
+    }
+    renderStats();
+  }
+
+  ["bBusca", "bCat", "bMun", "bFonte", "bPreco", "bPrio", "bOrdem", "bDireto", "bFav", "bAcomp"].forEach(function (id) {
+    $(id).addEventListener("input", renderBase);
+    $(id).addEventListener("change", renderBase);
+  });
+  $("bLimpar").addEventListener("click", function () {
+    $("bBusca").value = ""; ["bCat", "bMun", "bFonte", "bPrio"].forEach(function (id) { $(id).value = ""; });
+    $("bPreco").value = "todos"; $("bOrdem").value = "id";
+    ["bDireto", "bFav", "bAcomp"].forEach(function (id) { $(id).checked = false; });
+    renderBase();
+  });
+
+  var baseList = $("baseList");
+  baseList.addEventListener("click", function (e) {
+    var fav = e.target.closest("[data-fav]");
+    if (fav) {
+      e.stopPropagation();
+      var id = +fav.getAttribute("data-fav");
+      setTr(id, { fav: !tr(id).fav });
+      renderBase();
+      return;
+    }
+    var card = e.target.closest("[data-open]");
+    if (card) openDetail(+card.getAttribute("data-open"));
+  });
+  baseList.addEventListener("keydown", function (e) {
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-open]")) {
+      e.preventDefault(); openDetail(+e.target.getAttribute("data-open"));
+    }
+  });
+
+  /* ---------- detalhe ---------- */
+  var dlg = $("dlg");
+  function row(label, value, asHtml) {
+    if (value == null || value === "") return "";
+    return "<dt>" + esc(label) + "</dt><dd>" + (asHtml ? value : esc(value)) + "</dd>";
+  }
+  function urlOrText(v) { return isUrl(v) ? link(v) : esc(v); }
+
+  function descricaoParaCopia(p) {
+    var partes = [];
+    var local = [p.end || [p.bairro, p.mun].filter(Boolean).join(", ")].filter(Boolean)[0];
+    if (p.tipo) partes.push(p.tipo + (local ? " - " + local : ""));
+    var ar = metaAreas(p); if (ar) partes.push(ar);
+    if (p.carac) partes.push(p.carac);
+    if (p.obs) partes.push("Obs.: " + p.obs);
+    if (p.url) partes.push("Anúncio: " + p.url);
+    partes.push("Origem: Base de pesquisa, imóvel nº " + p.id);
+    return partes.join("\n");
+  }
+
+  function openDetail(id) {
+    var p = BASE.filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    var t = tr(id);
+    var temContato = p.tel || p.whats || p.email;
+
+    var resumo = row("Tipo", p.tipo) + row("Município", p.mun) + row("Bairro", p.bairro) +
+      row("Endereço", p.end) + row("Área do terreno", p.areaT != null ? fmtArea(p.areaT) + (p.areaT >= 100000 ? " (" + nf.format(p.areaT) + " m²)" : "") : "") +
+      row("Área construída", p.areaC != null ? fmtArea(p.areaC) : "") +
+      row("Quartos", p.q) + row("Suítes", p.s) + row("Vagas", p.v) + row("Características", p.carac);
+
+    var anunc = row("Tipo", p.tipoAnunc) + row("Nome", p.anunciante) + row("Empresa", p.empresa) +
+      row("Telefone", p.tel) + row("WhatsApp", p.whats) + row("E-mail", p.email) +
+      row("Site", p.site ? urlOrText(p.site) : "", true) + row("CRECI", p.creci) +
+      row("Página profissional", p.pagProf ? urlOrText(p.pagProf) : "", true) +
+      row("Tipo de contato", p.tipoContato);
+    if (!temContato) anunc += row("Contato", "Não disponível na pesquisa. Abra o anúncio e use o botão de contato do portal.");
+
+    var dados = row("Fonte", p.fonte) + row("Data da pesquisa", p.dataPesq) + row("Situação", p.situacao) +
+      row("Proprietário", p.propConf) + row("Confiança dos dados", p.conf) +
+      row("Prioridade comercial", p.prio) + row("Validação", p.validacao);
+
+    var statusOpts = STATUS.map(function (s) {
+      return '<option' + (s === t.status ? " selected" : "") + ">" + s + "</option>";
+    }).join("");
+
+    $("dlgBody").innerHTML =
+      '<span class="cat" style="--cc:var(--c-' + esc(p.cat) + ')">' + esc(p.cat) + "</span>" +
+      '<h2 id="dlgTitle">' + esc(p.titulo) + "</h2>" +
+      '<div class="pprice' + (p.preco == null ? " none" : "") + '">' + (p.preco == null ? "Preço não informado" : brl0.format(p.preco)) + "</div>" +
+      "<h4>Resumo</h4><dl class=\"kv\">" + resumo + "</dl>" +
+      "<h4>Anunciante e contato</h4><dl class=\"kv\">" + anunc + "</dl>" +
+      "<h4>Qualidade dos dados</h4><dl class=\"kv\">" + dados + "</dl>" +
+      (p.prox ? "<h4>Próxima ação sugerida</h4><p class=\"meta\" style=\"color:var(--ink)\">" + esc(p.prox) + "</p>" : "") +
+      (p.obs ? "<h4>Observações</h4><p class=\"meta\" style=\"color:var(--ink)\">" + linkify(p.obs) + "</p>" : "") +
+      '<div class="dlg-actions">' +
+        (p.url ? '<a class="btn primary" href="' + esc(p.url) + '" target="_blank" rel="noopener noreferrer">Abrir anúncio</a>' : "") +
+        '<button class="btn" id="dCopiar"' + (p.preco == null ? " disabled" : "") + ">Copiar para Meus imóveis</button>" +
+      "</div>" +
+      (p.preco == null ? '<p class="meta" style="margin-top:.4rem">Este imóvel não tem preço informado, então não dá para copiá-lo para Meus imóveis.</p>' : "") +
+      '<div class="track"><h4 style="margin-top:0">Meu acompanhamento</h4>' +
+        '<div class="checks"><label><input type="checkbox" id="dFav"' + (t.fav ? " checked" : "") + "> Favorito</label></div>" +
+        '<div class="field"><label for="dStatus">Status do contato</label><select id="dStatus">' + statusOpts + "</select></div>" +
+        '<div class="field"><label for="dNota">Anotações</label><textarea id="dNota" placeholder="Ex.: liguei dia 15, pediu retorno na sexta…">' + esc(t.nota) + "</textarea></div>" +
+      "</div>" +
+      '<div class="dlg-actions"><button class="btn" id="dFechar">Fechar</button></div>';
+
+    $("dFav").addEventListener("change", function (e) { setTr(id, { fav: e.target.checked }); });
+    $("dStatus").addEventListener("change", function (e) { setTr(id, { status: e.target.value }); });
+    $("dNota").addEventListener("input", function (e) { setTr(id, { nota: e.target.value }); });
+    $("dFechar").addEventListener("click", function () { dlg.close(); });
+    var cp = $("dCopiar");
+    cp.addEventListener("click", function () {
+      var ok = window.MeusImoveis.adicionar({
+        nome: p.titulo, valor: p.preco, descricao: descricaoParaCopia(p), origem: "base-" + p.id
+      });
+      window.__toast(ok ? "Copiado para Meus imóveis." : "Esse imóvel já está em Meus imóveis.");
+    });
+    if (!dlg.open) dlg.showModal();
+    $("dlgBody").scrollTop = 0;
+  }
+  dlg.addEventListener("close", renderBase);
+  dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
+
+  /* ---------- imobiliárias ---------- */
+  function renderImob() {
+    $("imobList").innerHTML = IMOB.map(function (m) {
+      var ids = "";
+      if (m.ids) {
+        var nums = m.ids.match(/\d+/g);
+        if (/^\s*\d/.test(m.ids) && nums) {
+          ids = '<div class="idlinks">' + nums.map(function (n) {
+            return '<button data-open-id="' + n + '">Imóvel ' + n + "</button>";
+          }).join("") + "</div>";
+        } else { ids = esc(m.ids); }
+      }
+      var redes = m.redes ? linkify(m.redes) : "";
+      return '<article class="info-card"><h3>' + esc(m.nome) + '</h3><dl class="kv">' +
+        row("CRECI", m.creci) + row("Endereço", m.end) + row("Telefone", m.tel) + row("WhatsApp", m.whats) +
+        row("E-mail", m.email) + row("Site", m.site ? urlOrText(m.site) : "", true) +
+        row("Redes sociais", redes, true) + row("Imóveis na base", ids, true) +
+        row("Confiança", m.conf) + row("Validação", m.valid) + row("Verificado em", m.data) +
+        row("Observações", m.obs) + "</dl></article>";
+    }).join("");
+  }
+  $("imobList").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-open-id]");
+    if (b) openDetail(+b.getAttribute("data-open-id"));
+  });
+
+  /* ---------- fontes ---------- */
+  function renderFontes() {
+    $("fontesList").innerHTML = FONTES.map(function (f) {
+      return '<article class="info-card"><h3>' + esc(f.fonte) + '</h3><dl class="kv">' +
+        row("Tipo", f.tipo) + row("Endereço", f.url ? urlOrText(f.url) : "", true) +
+        row("Cidades", f.cidades) + row("Categorias", f.cats) + row("Data", f.data) +
+        row("Imóveis coletados", f.n) + row("Limitações", f.lim) + "</dl></article>";
+    }).join("");
+    $("notasList").innerHTML = NOTAS.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("");
+  }
+
+  /* ---------- abas ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  function showTab(name) {
+    if (!document.getElementById("tab-" + name)) name = "meus";
+    tabs.forEach(function (b) { b.setAttribute("aria-selected", b.getAttribute("data-tab") === name ? "true" : "false"); });
+    ["meus", "base", "imob", "fontes"].forEach(function (n) { $("tab-" + n).hidden = (n !== name); });
+    try { history.replaceState(null, "", "#" + name); } catch (e) {}
+  }
+  tabs.forEach(function (b) { b.addEventListener("click", function () { showTab(b.getAttribute("data-tab")); window.scrollTo(0, 0); }); });
+  tabs.forEach(function (b, i) {
+    b.addEventListener("keydown", function (e) {
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) return;
+      var n = tabs[(i + d + tabs.length) % tabs.length]; n.focus(); showTab(n.getAttribute("data-tab"));
+    });
+  });
+
+  renderImob(); renderFontes(); renderBase();
+  showTab((location.hash || "#meus").slice(1));
+})();
+</script>
+</body>
+</html>
